@@ -13,8 +13,7 @@
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
-    "lib": "@/lib",PR-03: Supabase schema + RLS + storage policies
-SQL migrations/policies for tables and bucket
+    "lib": "@/lib",
     "hooks": "@/hooks"
   },
   "iconLibrary": "lucide"
