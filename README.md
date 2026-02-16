@@ -24,6 +24,18 @@ Team collaboration app built with Next.js App Router, Supabase, and Shadcn UI.
   - Unauthenticated users are redirected to `/login` for protected routes.
   - Authenticated users are redirected to `/dashboard` from `/login` and `/signup`.
 
+## PR-03 Scope
+
+- Added SQL migrations under `supabase/migrations/`:
+  - `001_schema.sql`: tables, constraints, indexes.
+  - `002_rls_policies.sql`: helper functions + RLS policies.
+  - `003_storage.sql`: storage bucket + storage object policies.
+- Implemented role-aware RLS:
+  - `owner`: workspace delete, member management, full note/file delete.
+  - `member`: workspace read access, note create/edit own, file upload/delete own.
+- Added storage access rules for `workspace-files` bucket path format:
+  - `{workspace_id}/{file_name}`
+
 ## Tech Stack
 
 - Next.js 16 (App Router)
@@ -70,7 +82,10 @@ Open `http://localhost:3000`.
 - `src/app/signup/page.tsx`: Signup page.
 - `src/app/dashboard/page.tsx`: Protected dashboard placeholder.
 - `src/app/workspace/[id]/page.tsx`: Protected workspace placeholder.
+- `supabase/migrations/001_schema.sql`: relational schema.
+- `supabase/migrations/002_rls_policies.sql`: RLS helpers and policies.
+- `supabase/migrations/003_storage.sql`: storage bucket and policies.
 
 ## Next PR
 
-PR-03 will implement Supabase schema, storage bucket setup, and RLS policies.
+PR-04 will implement dashboard workspace CRUD + join flow.
