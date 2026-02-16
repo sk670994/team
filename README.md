@@ -36,6 +36,35 @@ Team collaboration app built with Next.js App Router, Supabase, and Shadcn UI.
 - Added storage access rules for `workspace-files` bucket path format:
   - `{workspace_id}/{file_name}`
 
+## PR-04 Scope
+
+- Added invite-code support for workspaces in migration:
+  - `004_workspace_invites_and_rpc.sql`
+- Added secure RPC helpers:
+  - `create_workspace(p_name text)`
+  - `join_workspace_by_invite(p_invite_code text)`
+- Implemented dashboard workspace flows:
+  - List user workspaces
+  - Create workspace
+  - Join workspace via invite code
+  - Owner-only delete workspace
+- Added dialog-based UI for create/join actions.
+
+## PR-05 Scope
+
+- Replaced `/workspace/[id]` placeholder with a structured workspace shell.
+- Added membership enforcement on server side:
+  - Unauthenticated users -> `/login`
+  - Non-members -> redirected to `/dashboard` with access error
+- Added workspace metadata and role-aware header:
+  - Workspace name, ID, created date
+  - Current user role badge (`owner`/`member`)
+  - Owner/member access hint text
+- Added section containers for next PRs:
+  - Notes section container (PR-06 target)
+  - Files section container (PR-07 target)
+  - Members section container (follow-up target)
+
 ## Tech Stack
 
 - Next.js 16 (App Router)
@@ -85,7 +114,11 @@ Open `http://localhost:3000`.
 - `supabase/migrations/001_schema.sql`: relational schema.
 - `supabase/migrations/002_rls_policies.sql`: RLS helpers and policies.
 - `supabase/migrations/003_storage.sql`: storage bucket and policies.
+- `supabase/migrations/004_workspace_invites_and_rpc.sql`: invite code + RPC helpers.
+- `src/app/dashboard/actions.ts`: server actions for create/join/delete workspace.
+- `src/components/workspaces/*`: dashboard dialogs for create/join.
+- `src/app/workspace/[id]/page.tsx`: workspace shell with membership enforcement.
 
 ## Next PR
 
-PR-04 will implement dashboard workspace CRUD + join flow.
+PR-06 will implement notes CRUD with role checks.
