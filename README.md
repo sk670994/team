@@ -10,6 +10,20 @@ Team collaboration app built with Next.js App Router, Supabase, and Shadcn UI.
 - Shared app shell layout added.
 - Environment variable template added.
 
+## PR-02 Scope
+
+- Added `/login` and `/signup` routes with email/password forms.
+- Added server actions for sign up, login, and logout.
+- Added auth-aware app shell actions:
+  - Logged out: `Login`, `Sign up`
+  - Logged in: `Dashboard`, `Logout`
+- Added protected routes:
+  - `/dashboard`
+  - `/workspace/[id]`
+- Added redirects:
+  - Unauthenticated users are redirected to `/login` for protected routes.
+  - Authenticated users are redirected to `/dashboard` from `/login` and `/signup`.
+
 ## Tech Stack
 
 - Next.js 16 (App Router)
@@ -51,7 +65,12 @@ Open `http://localhost:3000`.
 - `src/lib/supabase/middleware.ts`: Session sync helper used by middleware.
 - `src/components/ui/*`: Shadcn-style UI primitives.
 - `src/components/layout/app-shell.tsx`: Shared top-level app shell.
+- `src/app/auth/actions.ts`: Server actions for login/signup/logout.
+- `src/app/login/page.tsx`: Login page.
+- `src/app/signup/page.tsx`: Signup page.
+- `src/app/dashboard/page.tsx`: Protected dashboard placeholder.
+- `src/app/workspace/[id]/page.tsx`: Protected workspace placeholder.
 
 ## Next PR
 
-PR-02 will implement authentication pages (`/login`, `/signup`), logout, and protected route behavior.
+PR-03 will implement Supabase schema, storage bucket setup, and RLS policies.
