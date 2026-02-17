@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 
 type CreateNoteDialogProps = {
@@ -53,7 +54,7 @@ export function CreateNoteDialog({ workspaceId }: CreateNoteDialogProps) {
             />
           </div>
           <DialogFooter>
-            <Button type="submit">Create</Button>
+            <SubmitButton pendingText="Creating...">Create</SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>

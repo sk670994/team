@@ -149,6 +149,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         variant="destructive"
                         size="sm"
                         confirmMessage="Delete this workspace? This action cannot be undone."
+                        pendingText="Deleting..."
                       >
                         Delete
                       </ConfirmSubmitButton>

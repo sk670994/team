@@ -1,5 +1,4 @@
 import { deleteFileAction, downloadFileAction } from "@/app/workspace/[id]/actions";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export type WorkspaceFileItem = {
   id: string;
@@ -58,19 +58,19 @@ export function FilesList({ workspaceId, files, currentUserId, isOwner }: FilesL
               <form action={downloadFileAction}>
                 <input type="hidden" name="workspace_id" value={workspaceId} />
                 <input type="hidden" name="file_id" value={file.id} />
-                <Button type="submit" variant="outline" size="sm">
+                <SubmitButton variant="outline" size="sm" pendingText="Preparing...">
                   Download
-                </Button>
+                </SubmitButton>
               </form>
               {canDelete ? (
                 <form action={deleteFileAction}>
                   <input type="hidden" name="workspace_id" value={workspaceId} />
                   <input type="hidden" name="file_id" value={file.id} />
                   <ConfirmSubmitButton
-                    type="submit"
                     variant="destructive"
                     size="sm"
                     confirmMessage="Delete this file? This action cannot be undone."
+                    pendingText="Deleting..."
                   >
                     Delete
                   </ConfirmSubmitButton>

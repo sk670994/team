@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 
 type EditNoteDialogProps = {
@@ -59,7 +60,7 @@ export function EditNoteDialog({ workspaceId, noteId, title, content }: EditNote
             />
           </div>
           <DialogFooter>
-            <Button type="submit">Save changes</Button>
+            <SubmitButton pendingText="Saving...">Save changes</SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>

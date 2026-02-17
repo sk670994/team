@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 type DeleteNoteDialogProps = {
   workspaceId: string;
@@ -41,9 +42,9 @@ export function DeleteNoteDialog({ workspaceId, noteId, title }: DeleteNoteDialo
           <input type="hidden" name="workspace_id" value={workspaceId} />
           <input type="hidden" name="note_id" value={noteId} />
           <DialogFooter>
-            <Button type="submit" variant="destructive">
+            <SubmitButton type="submit" variant="destructive" pendingText="Deleting...">
               Confirm delete
-            </Button>
+            </SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>

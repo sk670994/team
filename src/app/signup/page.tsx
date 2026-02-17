@@ -35,6 +35,12 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
         <CardContent>
           <form action={signupAction} className="space-y-4">
             <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Name
+              </label>
+              <Input id="name" name="name" type="text" placeholder="John Doe" required />
+            </div>
+            <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
               </label>

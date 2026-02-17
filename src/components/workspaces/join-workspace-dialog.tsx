@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,7 @@ export function JoinWorkspaceDialog() {
             <Input id="invite-code" name="invite_code" placeholder="A1B2C3D4E5" required />
           </div>
           <DialogFooter>
-            <Button type="submit">Join</Button>
+            <SubmitButton pendingText="Joining...">Join</SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>
