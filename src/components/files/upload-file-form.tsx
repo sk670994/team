@@ -1,5 +1,5 @@
 import { uploadFileAction } from "@/app/workspace/[id]/actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 type UploadFileFormProps = {
   workspaceId: string;
@@ -16,7 +16,7 @@ export function UploadFileForm({ workspaceId }: UploadFileFormProps) {
           required
           className="w-full cursor-pointer text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm"
         />
-        <Button type="submit">Upload file</Button>
+        <SubmitButton pendingText="Uploading...">Upload file</SubmitButton>
       </form>
       <p className="text-xs text-muted-foreground">Max file size: 10MB.</p>
     </div>

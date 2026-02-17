@@ -29,17 +29,23 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function signupAction(formData: FormData) {
+  const name = getField(formData, "name");
   const email = getField(formData, "email");
   const password = getField(formData, "password");
 
-  if (!email || !password) {
-    redirect("/signup?error=Email%20and%20password%20are%20required");
+  if (!name || !email || !password) {
+    redirect("/signup?error=Name,%20email%20and%20password%20are%20required");
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        full_name: name,
+      },
+    },
   });
 
   if (error) {

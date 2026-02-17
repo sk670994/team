@@ -36,6 +36,17 @@ type MembershipRow = {
   role: "owner" | "member";
 };
 
+type WorkspaceMemberRow = {
+  user_id: string;
+  role: "owner" | "member";
+  created_at: string;
+};
+
+type ProfileRow = {
+  id: string;
+  full_name: string;
+};
+
 type NoteRow = NoteItem;
 type FileRow = WorkspaceFileItem;
 
@@ -99,6 +110,25 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
     .order("created_at", { ascending: false });
 
   const files = (filesData ?? []) as FileRow[];
+  const { data: membersData, error: membersError } = await supabase
+    .from("workspace_members")
+    .select("user_id,role,created_at")
+    .eq("workspace_id", workspaceRow.id)
+    .order("created_at", { ascending: true });
+
+  const members = ((membersData ?? []) as WorkspaceMemberRow[]).sort((a, b) => {
+    if (a.role === b.role) return 0;
+    return a.role === "owner" ? -1 : 1;
+  });
+  const memberIds = members.map((member) => member.user_id);
+  const { data: profilesData } =
+    memberIds.length > 0
+      ? await supabase.from("profiles").select("id,full_name").in("id", memberIds)
+      : { data: [] as ProfileRow[] };
+
+  const profileMap = new Map(
+    ((profilesData ?? []) as ProfileRow[]).map((profile) => [profile.id, profile.full_name])
+  );
 
   return (
     <div className="space-y-6">
@@ -173,6 +203,16 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
         </Card>
       ) : null}
 
+      {membersError ? (
+        <Card className="border-destructive">
+          <CardContent className="p-4">
+            <p className="text-sm text-destructive">
+              <span className="font-medium">Error:</span> {membersError.message}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card>
@@ -216,12 +256,32 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
         <Card>
           <CardHeader>
             <CardTitle>Members</CardTitle>
-            <CardDescription>Member management UI placeholder.</CardDescription>
+            <CardDescription>All members currently in this workspace.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Invite/member list controls will be added in a follow-up PR.
-            </p>
+            {members.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No members found.</p>
+            ) : (
+              <div className="space-y-2">
+                {members.map((member) => (
+                  <div key={member.user_id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {profileMap.get(member.user_id) ?? "Unknown user"}
+                      </p>
+                      <p className="truncate font-mono text-xs text-muted-foreground">{member.user_id}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Joined {new Date(member.created_at).toLocaleDateString()}
+                        {member.user_id === user.id ? " (you)" : ""}
+                      </p>
+                    </div>
+                    <span className="rounded-md border px-2 py-1 text-xs font-medium uppercase">
+                      {member.role}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

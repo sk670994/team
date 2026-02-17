@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,7 @@ export function CreateWorkspaceDialog() {
             <Input id="workspace-name" name="name" placeholder="Engineering Team" required />
           </div>
           <DialogFooter>
-            <Button type="submit">Create</Button>
+            <SubmitButton pendingText="Creating...">Create</SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>
