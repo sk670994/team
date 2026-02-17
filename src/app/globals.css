@@ -79,4 +79,73 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  :where(
+      a[href],
+      button,
+      [role="button"],
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      summary
+    ) {
+    cursor: pointer;
+    transition: transform 120ms ease, filter 120ms ease;
+  }
+
+  :where(
+      a[href],
+      button,
+      [role="button"],
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      summary
+    ):active {
+    transform: scale(0.98);
+    filter: brightness(0.98);
+  }
+
+  :where(
+      a[href],
+      button,
+      [role="button"],
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      summary
+    ):disabled {
+    cursor: not-allowed;
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @layer base {
+    :where(
+        a[href],
+        button,
+        [role="button"],
+        input[type="button"],
+        input[type="submit"],
+        input[type="reset"],
+        summary
+      ) {
+      transition: none;
+    }
+
+    :where(
+        a[href],
+        button,
+        [role="button"],
+        input[type="button"],
+        input[type="submit"],
+        input[type="reset"],
+        summary
+      ):active {
+      transform: none;
+      filter: none;
+    }
+  }
 }
