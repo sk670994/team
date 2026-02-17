@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { CreateNoteDialog } from "@/components/notes/create-note-dialog";
+import { NotesList, type NoteItem } from "@/components/notes/notes-list";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +15,10 @@ import { createClient } from "@/lib/supabase/server";
 type WorkspacePageProps = {
   params: Promise<{
     id: string;
+  }>;
+  searchParams: Promise<{
+    message?: string;
+    error?: string;
   }>;
 };
 
@@ -28,7 +34,9 @@ type MembershipRow = {
   role: "owner" | "member";
 };
 
-export default async function WorkspacePage({ params }: WorkspacePageProps) {
+type NoteRow = NoteItem;
+
+export default async function WorkspacePage({ params, searchParams }: WorkspacePageProps) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -72,6 +80,15 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
   const membershipRow = membership as MembershipRow;
   const workspaceRow = workspace as WorkspaceRow;
   const isOwner = membershipRow.role === "owner";
+  const pageParams = await searchParams;
+
+  const { data: notesData, error: notesError } = await supabase
+    .from("notes")
+    .select("id,title,content,created_by,created_at")
+    .eq("workspace_id", workspaceRow.id)
+    .order("created_at", { ascending: false });
+
+  const notes = (notesData ?? []) as NoteRow[];
 
   return (
     <div className="space-y-6">
@@ -106,18 +123,52 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         </CardContent>
       </Card>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-            <CardDescription>Notes CRUD will be added in PR-06.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This section will contain note creation, listing, and edit controls.
-            </p>
+      {pageParams.message ? (
+        <Card className="border-green-300">
+          <CardContent className="p-4">
+            <p className="text-sm">{pageParams.message}</p>
           </CardContent>
         </Card>
+      ) : null}
+
+      {pageParams.error ? (
+        <Card className="border-destructive">
+          <CardContent className="p-4">
+            <p className="text-sm text-destructive">{pageParams.error}</p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {notesError ? (
+        <Card className="border-destructive">
+          <CardContent className="p-4">
+            <p className="text-sm text-destructive">{notesError.message}</p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle>Notes</CardTitle>
+                  <CardDescription>
+                    Create notes and manage creator/owner edit and delete permissions.
+                  </CardDescription>
+                </div>
+                <CreateNoteDialog workspaceId={workspaceRow.id} />
+              </div>
+            </CardHeader>
+          </Card>
+          <NotesList
+            workspaceId={workspaceRow.id}
+            notes={notes}
+            currentUserId={user.id}
+            isOwner={isOwner}
+          />
+        </div>
 
         <Card>
           <CardHeader>
