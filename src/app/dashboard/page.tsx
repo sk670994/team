@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { createClient } from "@/lib/supabase/server";
 
 type DashboardPageProps = {
@@ -67,7 +68,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <CardHeader>
           <CardTitle>Workspace Dashboard</CardTitle>
           <CardDescription>
-            Create a workspace, join with an invite code, and manage owner actions.
+            Create or join workspaces, then manage access-aware actions by role.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
@@ -79,7 +80,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       {params.message ? (
         <Card className="border-green-300">
           <CardContent className="p-4">
-            <p className="text-sm">{params.message}</p>
+            <p className="text-sm">
+              <span className="font-medium">Success:</span> {params.message}
+            </p>
           </CardContent>
         </Card>
       ) : null}
@@ -87,7 +90,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       {params.error ? (
         <Card className="border-destructive">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{params.error}</p>
+            <p className="text-sm text-destructive">
+              <span className="font-medium">Error:</span> {params.error}
+            </p>
           </CardContent>
         </Card>
       ) : null}
@@ -95,7 +100,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       {error ? (
         <Card className="border-destructive">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{error.message}</p>
+            <p className="text-sm text-destructive">
+              <span className="font-medium">Error:</span> {error.message}
+            </p>
           </CardContent>
         </Card>
       ) : null}
@@ -137,9 +144,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   {isOwner ? (
                     <form action={deleteWorkspaceAction}>
                       <input type="hidden" name="workspace_id" value={workspace.id} />
-                      <Button type="submit" variant="destructive">
+                      <ConfirmSubmitButton
+                        type="submit"
+                        variant="destructive"
+                        size="sm"
+                        confirmMessage="Delete this workspace? This action cannot be undone."
+                      >
                         Delete
-                      </Button>
+                      </ConfirmSubmitButton>
                     </form>
                   ) : null}
                 </CardFooter>

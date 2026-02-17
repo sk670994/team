@@ -12,6 +12,16 @@ type NoteAccessRow = {
   created_by: string;
 };
 
+type FileAccessRow = {
+  id: string;
+  workspace_id: string;
+  uploaded_by: string;
+  file_path: string;
+};
+
+const WORKSPACE_FILES_BUCKET = "workspace-files";
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
@@ -20,11 +30,11 @@ function encodeMessage(message: string) {
   return encodeURIComponent(message);
 }
 
-function redirectWorkspaceError(workspaceId: string, message: string) {
+function redirectWorkspaceError(workspaceId: string, message: string): never {
   redirect(`/workspace/${workspaceId}?error=${encodeMessage(message)}`);
 }
 
-function redirectWorkspaceMessage(workspaceId: string, message: string) {
+function redirectWorkspaceMessage(workspaceId: string, message: string): never {
   redirect(`/workspace/${workspaceId}?message=${encodeMessage(message)}`);
 }
 
@@ -205,4 +215,159 @@ export async function deleteNoteAction(formData: FormData) {
 
   revalidatePath(`/workspace/${workspaceId}`);
   redirectWorkspaceMessage(workspaceId, "Note deleted");
+}
+
+function sanitizeFileName(fileName: string) {
+  return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+export async function uploadFileAction(formData: FormData) {
+  const { workspaceId, userId, supabase } = await requireUserAndWorkspace(formData);
+  const role = await getMembershipRole(workspaceId, userId);
+
+  if (!role) {
+    redirectWorkspaceError(workspaceId, "You do not have access to this workspace");
+  }
+
+  const fileEntry = formData.get("file");
+  const file = fileEntry instanceof File ? fileEntry : null;
+
+  if (!file || file.size === 0) {
+    redirectWorkspaceError(workspaceId, "Please select a file to upload");
+  }
+
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    redirectWorkspaceError(workspaceId, "File size exceeds 10MB limit");
+  }
+
+  const originalFileName = file.name.trim();
+  if (!originalFileName) {
+    redirectWorkspaceError(workspaceId, "Invalid file name");
+  }
+
+  const safeFileName = sanitizeFileName(originalFileName);
+  const filePath = `${workspaceId}/${crypto.randomUUID()}-${safeFileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(WORKSPACE_FILES_BUCKET)
+    .upload(filePath, file, {
+      upsert: false,
+      contentType: file.type || undefined,
+    });
+
+  if (uploadError) {
+    redirectWorkspaceError(workspaceId, uploadError.message);
+  }
+
+  const { error: insertError } = await supabase.from("files").insert({
+    workspace_id: workspaceId,
+    file_name: originalFileName,
+    file_path: filePath,
+    uploaded_by: userId,
+  });
+
+  if (insertError) {
+    await supabase.storage.from(WORKSPACE_FILES_BUCKET).remove([filePath]);
+    redirectWorkspaceError(workspaceId, insertError.message);
+  }
+
+  revalidatePath(`/workspace/${workspaceId}`);
+  redirectWorkspaceMessage(workspaceId, "File uploaded");
+}
+
+export async function downloadFileAction(formData: FormData) {
+  const { workspaceId, userId, supabase } = await requireUserAndWorkspace(formData);
+  const fileId = getField(formData, "file_id");
+
+  if (!fileId) {
+    redirectWorkspaceError(workspaceId, "File id is required");
+  }
+
+  const role = await getMembershipRole(workspaceId, userId);
+  if (!role) {
+    redirectWorkspaceError(workspaceId, "You do not have access to this workspace");
+  }
+
+  const { data: fileRecord, error: fileError } = await supabase
+    .from("files")
+    .select("id,workspace_id,uploaded_by,file_path")
+    .eq("id", fileId)
+    .maybeSingle();
+
+  if (fileError) {
+    redirectWorkspaceError(workspaceId, fileError.message);
+  }
+
+  if (!fileRecord) {
+    redirectWorkspaceError(workspaceId, "File not found");
+  }
+
+  const fileRow = fileRecord as FileAccessRow;
+  if (fileRow.workspace_id !== workspaceId) {
+    redirectWorkspaceError(workspaceId, "Invalid workspace for file download");
+  }
+
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from(WORKSPACE_FILES_BUCKET)
+    .createSignedUrl(fileRow.file_path, 60);
+
+  if (signedError || !signedData?.signedUrl) {
+    redirectWorkspaceError(workspaceId, signedError?.message ?? "Unable to generate download URL");
+  }
+
+  redirect(signedData.signedUrl);
+}
+
+export async function deleteFileAction(formData: FormData) {
+  const { workspaceId, userId, supabase } = await requireUserAndWorkspace(formData);
+  const fileId = getField(formData, "file_id");
+
+  if (!fileId) {
+    redirectWorkspaceError(workspaceId, "File id is required");
+  }
+
+  const role = await getMembershipRole(workspaceId, userId);
+  if (!role) {
+    redirectWorkspaceError(workspaceId, "You do not have access to this workspace");
+  }
+
+  const { data: fileRecord, error: fileError } = await supabase
+    .from("files")
+    .select("id,workspace_id,uploaded_by,file_path")
+    .eq("id", fileId)
+    .maybeSingle();
+
+  if (fileError) {
+    redirectWorkspaceError(workspaceId, fileError.message);
+  }
+
+  if (!fileRecord) {
+    redirectWorkspaceError(workspaceId, "File not found");
+  }
+
+  const fileRow = fileRecord as FileAccessRow;
+  if (fileRow.workspace_id !== workspaceId) {
+    redirectWorkspaceError(workspaceId, "Invalid workspace for file delete");
+  }
+
+  const canManage = role === "owner" || fileRow.uploaded_by === userId;
+  if (!canManage) {
+    redirectWorkspaceError(workspaceId, "You do not have permission to delete this file");
+  }
+
+  const { error: storageDeleteError } = await supabase.storage
+    .from(WORKSPACE_FILES_BUCKET)
+    .remove([fileRow.file_path]);
+
+  if (storageDeleteError) {
+    redirectWorkspaceError(workspaceId, storageDeleteError.message);
+  }
+
+  const { error: metadataDeleteError } = await supabase.from("files").delete().eq("id", fileId);
+  if (metadataDeleteError) {
+    redirectWorkspaceError(workspaceId, metadataDeleteError.message);
+  }
+
+  revalidatePath(`/workspace/${workspaceId}`);
+  redirectWorkspaceMessage(workspaceId, "File deleted");
 }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { FilesList, type WorkspaceFileItem } from "@/components/files/files-list";
+import { UploadFileForm } from "@/components/files/upload-file-form";
 import { CreateNoteDialog } from "@/components/notes/create-note-dialog";
 import { NotesList, type NoteItem } from "@/components/notes/notes-list";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,7 @@ type MembershipRow = {
 };
 
 type NoteRow = NoteItem;
+type FileRow = WorkspaceFileItem;
 
 export default async function WorkspacePage({ params, searchParams }: WorkspacePageProps) {
   const supabase = await createClient();
@@ -89,6 +92,13 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
     .order("created_at", { ascending: false });
 
   const notes = (notesData ?? []) as NoteRow[];
+  const { data: filesData, error: filesError } = await supabase
+    .from("files")
+    .select("id,file_name,file_path,uploaded_by,created_at")
+    .eq("workspace_id", workspaceRow.id)
+    .order("created_at", { ascending: false });
+
+  const files = (filesData ?? []) as FileRow[];
 
   return (
     <div className="space-y-6">
@@ -126,7 +136,9 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
       {pageParams.message ? (
         <Card className="border-green-300">
           <CardContent className="p-4">
-            <p className="text-sm">{pageParams.message}</p>
+            <p className="text-sm">
+              <span className="font-medium">Success:</span> {pageParams.message}
+            </p>
           </CardContent>
         </Card>
       ) : null}
@@ -134,7 +146,9 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
       {pageParams.error ? (
         <Card className="border-destructive">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{pageParams.error}</p>
+            <p className="text-sm text-destructive">
+              <span className="font-medium">Error:</span> {pageParams.error}
+            </p>
           </CardContent>
         </Card>
       ) : null}
@@ -142,7 +156,19 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
       {notesError ? (
         <Card className="border-destructive">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{notesError.message}</p>
+            <p className="text-sm text-destructive">
+              <span className="font-medium">Error:</span> {notesError.message}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {filesError ? (
+        <Card className="border-destructive">
+          <CardContent className="p-4">
+            <p className="text-sm text-destructive">
+              <span className="font-medium">Error:</span> {filesError.message}
+            </p>
           </CardContent>
         </Card>
       ) : null}
@@ -168,19 +194,24 @@ export default async function WorkspacePage({ params, searchParams }: WorkspaceP
             currentUserId={user.id}
             isOwner={isOwner}
           />
+          <Card>
+            <CardHeader>
+              <CardTitle>Files</CardTitle>
+              <CardDescription>
+                Upload, download, and delete files with member and owner role checks.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UploadFileForm workspaceId={workspaceRow.id} />
+            </CardContent>
+          </Card>
+          <FilesList
+            workspaceId={workspaceRow.id}
+            files={files}
+            currentUserId={user.id}
+            isOwner={isOwner}
+          />
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Files</CardTitle>
-            <CardDescription>File upload/list/delete will be added in PR-07.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This section will contain workspace file upload and management.
-            </p>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
