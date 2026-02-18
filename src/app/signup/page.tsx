@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { googleSignInAction, signupAction } from "@/app/auth/actions";
+import { GoogleCtaButton } from "@/components/auth/google-cta-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,9 +35,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
         </CardHeader>
         <CardContent>
           <form action={googleSignInAction} className="space-y-4">
-            <Button type="submit" variant="outline" className="w-full">
-              Continue with Google
-            </Button>
+            <GoogleCtaButton />
           </form>
           <div className="my-4 h-px bg-border" />
           <form action={signupAction} className="space-y-4">
