@@ -1,10 +1,23 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+function getBaseUrlFromHeaders(originHeader: string | null) {
+  if (originHeader) return originHeader;
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL;
+  if (siteUrl) return siteUrl;
+
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) return `https://${vercelUrl}`;
+
+  return "http://localhost:3000";
 }
 
 export async function loginAction(formData: FormData) {
@@ -26,6 +39,25 @@ export async function loginAction(formData: FormData) {
   }
 
   redirect("/dashboard");
+}
+
+export async function googleSignInAction() {
+  const supabase = await createClient();
+  const headerStore = await headers();
+  const baseUrl = getBaseUrlFromHeaders(headerStore.get("origin"));
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${baseUrl}/auth/callback`,
+    },
+  });
+
+  if (error || !data?.url) {
+    redirect(`/login?error=${encodeURIComponent(error?.message ?? "Unable to start Google sign-in")}`);
+  }
+
+  redirect(data.url);
 }
 
 export async function signupAction(formData: FormData) {
